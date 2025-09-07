@@ -115,7 +115,8 @@ def Decrypt_Button():
 
 def Open_Link(event=None):
     """Open GitHub link in default browser."""
-    pass
+    url = "https://github.com/ArianGhanooni"
+    webbrowser.open_new_tab(url)
 
 # ----------------------------
 # Main Window Configuration
