@@ -48,7 +48,40 @@ def Generate_Key_Button():
     
 def Encrypt_Button():
     """Handle Encrypt button click."""
-    pass
+    # Step 1: Check for key filename
+    filename = Entry_Key.get().strip()
+    if not filename:
+        messagebox.showwarning("Warning", "Please enter a file name in the 'File Name' field!")
+        return
+
+    # Step 2: Check for plain text
+    plaintext = Plain_Text.get("1.0", END).strip()
+    if not plaintext:
+        messagebox.showwarning("Warning", "Please enter a message in the Plain Text field!")
+        return
+
+    # Step 3: Save cipher if Entry_Decrypt is provided
+    cipher_filename = Entry_Decrypt.get().strip()
+    if not cipher_filename:
+        messagebox.showwarning("Warning", "Please enter a name for save cipher file in the 'Encrypted File' field!")
+        return
+    
+    try:
+        # Step 4: Encrypt message (adjust to your encryption function)
+        public, private = readKeysFromFile(filename)
+        encrypt(plaintext, public, cipher_filename)
+        messagebox.showinfo("Success", f"Message encrypted and saved as {cipher_filename}")
+
+        # Step 5: Clear Cipher_Text and insert result
+        encrypted_path = os.path.join(BASE_DIR, cipher_filename)
+        with open(encrypted_path, 'r') as file:
+              Cipher = file.read()
+
+        Cipher_Text.delete("1.0", END)
+        Cipher_Text.insert("1.0", Cipher)
+
+    except Exception as e:
+        messagebox.showerror("Error", f"Encryption failed:\n{e}")
 
 def Decrypt_Button():
     """Handle Decrypt button click."""
