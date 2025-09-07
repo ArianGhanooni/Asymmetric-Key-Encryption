@@ -85,7 +85,33 @@ def Encrypt_Button():
 
 def Decrypt_Button():
     """Handle Decrypt button click."""
-    pass
+    # Step 1: Check for key filename
+    filename = Entry_Key.get().strip()
+    if not filename:
+        messagebox.showwarning("Warning", "Please enter a file name in the 'File Name' field!")
+        return
+
+    # Step 2: Check for cipher file name
+    cipher_filename = Entry_Decrypt.get().strip()
+    if not cipher_filename:
+        messagebox.showwarning("Warning", "Please enter the encrypted file name in the 'Encrypted File' field!")
+        return
+
+    try:
+        # Step 3: Read cipher text from file
+        public, private = readKeysFromFile(filename)
+        original_File = decrypt(cipher_filename, private)
+
+        # Step 4: Clear Original_Text and insert result
+        Original_Text.delete("1.0", END)
+        Original_Text.insert("1.0", original_File)
+
+        messagebox.showinfo("Success", "Message decrypted successfully!")
+
+    except FileNotFoundError:
+        messagebox.showerror("Error", f"File '{cipher_filename}.txt' not found!")
+    except Exception as e:
+        messagebox.showerror("Error", f"Decryption failed:\n{e}")
 
 def Open_Link(event=None):
     """Open GitHub link in default browser."""
