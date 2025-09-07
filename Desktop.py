@@ -3,14 +3,49 @@ import webbrowser
 from tkinter import *
 from tkinter import filedialog
 from KeyGenerator import *
+from tkinter import messagebox
 
 # ----------------------------
 # Event Handlers (to be implemented later)
 # ----------------------------
 def Generate_Key_Button():
     """Handle Generate Key button click."""
-    pass
+    def Confirm_Key():
+        try:
+            keySize = int(entry_keysize.get())
+            fileName = Entry_Key.get()
+            
+            if not fileName:
+                messagebox.showwarning("Warning", "Please enter a file name in the main window!")
+                return
+            
+            # Call Key Generator function
+            publicKey, privateKey = generateKeys(keySize, log = True)
+            writeKeysToFile(keySize, publicKey, privateKey, fileName)  
+            
+            messagebox.showinfo("Success", f"Key generated successfully!\nFile: {fileName}")
+            top.destroy()
+        except ValueError:
+            messagebox.showerror("Error", "Key size must be a number!")
 
+    # Create popup window
+    top = Toplevel(root)
+    top.title("Key Size")
+    top.geometry("300x150")
+    top.resizable(False, False)
+    top.config(bg="#121212")
+
+    Label(top, text="Enter Key Size:", font=("Inter", 12, "bold"),
+          bg="#121212", fg="#ffffff").pack(pady=10)
+
+    entry_keysize = Entry(top, font=("Inter", 12), bg="#262626", fg="#ffffff", width=15)
+    entry_keysize.pack(pady=5)
+
+    Button(top, text="Generate", font=("Inter", 12, "bold"),
+           bg="#d32f2f", fg="#ffffff",
+           activebackground="#ffffff", activeforeground="#d32f2f",
+           command=Confirm_Key).pack(pady=15)
+    
 def Encrypt_Button():
     """Handle Encrypt button click."""
     pass
