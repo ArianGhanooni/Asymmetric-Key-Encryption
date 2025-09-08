@@ -1,11 +1,16 @@
 import os
+import sys
 import Math
 import string
 import random
 import PrimeNumber
 
 #Files Path
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+if getattr(sys, 'frozen', False):  
+    BASE_DIR = os.path.dirname(sys.executable)
+else:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 
 #Key Generator
 def generateKeys(keySize = 1024, log = False):
@@ -161,26 +166,27 @@ def readKeysFromFile(fileName):
     return publicKey, privateKey
 
 #BODY
-generateKey = input("Do you want Generate key or Encrypt/decrypt? (Enter G or E) : ").upper()
+if __name__ == "__main__":
+    generateKey = input("Do you want Generate key or Encrypt/decrypt? (Enter G or E) : ").upper()
 
-if generateKey == "G":
-    keySize = int(input("Keysize : "))
-    fileName = input("Output file name : ")
-    publicKey, privateKey = generateKeys(keySize, log = True)
-    writeKeysToFile(keySize, publicKey, privateKey, fileName)
+    if generateKey == "G":
+        keySize = int(input("Keysize : "))
+        fileName = input("Output file name : ")
+        publicKey, privateKey = generateKeys(keySize, log = True)
+        writeKeysToFile(keySize, publicKey, privateKey, fileName)
 
-elif generateKey == "E":
-    op = input("Encrypt or Decrypt ? (Enter E or D) : ").upper()
+    elif generateKey == "E":
+        op = input("Encrypt or Decrypt ? (Enter E or D) : ").upper()
 
-    if op == "E":
-        plainText = input("Your Message : ")
-        keyFile = input("Key File Name : ")
-        outputFile = input("Output File Name : ")
-        public, private = readKeysFromFile(keyFile)
-        encrypt(plainText, public, outputFile)
+        if op == "E":
+            plainText = input("Your Message : ")
+            keyFile = input("Key File Name : ")
+            outputFile = input("Output File Name : ")
+            public, private = readKeysFromFile(keyFile)
+            encrypt(plainText, public, outputFile)
 
-    elif op == "D":
-        encryptedFile = input("Encrypted File Name : ")
-        keyFile = input("Key File Name : ")
-        public, private = readKeysFromFile(keyFile)
-        print(decrypt(encryptedFile, private))
+        elif op == "D":
+            encryptedFile = input("Encrypted File Name : ")
+            keyFile = input("Key File Name : ")
+            public, private = readKeysFromFile(keyFile)
+            print(decrypt(encryptedFile, private))
