@@ -1,23 +1,54 @@
-# RSA Cryptosystem in Python
+# 🔐 RSA Cryptosystem in Python
 
-This repository provides a simple yet educational implementation of the **RSA algorithm** in Python.  
-It demonstrates how public and private keys are generated, and how messages can be securely encrypted and decrypted.
+A Python-based **desktop application** for **RSA key generation, encryption, and decryption** with a simple **Tkinter GUI**.  
+This project demonstrates how asymmetric encryption works in practice while offering a user-friendly interface.
 
 ## Features
-- 🔑 Key generation with customizable key size
+- 🔑 Generate RSA key pairs (public & private) with custom key sizes.
 - ✉️ Message encryption & decryption
+- ✅ Dark mode modern GUI built with Tkinter. 
 - 🧮 Prime number generation using the Rabin-Miller primality test
 - 📂 Save & load keys from files
 
 ## Modules
-- **file1 (KeyGenerator)**: Main script for generating keys, encrypting, and decrypting messages
-- **file2 (Math)**: Prime number generation & primality testing
-- **file3 (PrimeNumber)**: Mathematical helper functions (GCD, modular inverse)
+- **file1 (Desktop)**: GUI application
+- **file2 (KeyGenerator)**: RSA key generation, encryption & decryption
+- **file3 (Math)**: Math utilities (GCD, modular inverse)
+- **file4 (PrimeNumber)**: Prime number generation & Rabin-Miller test
+- **file5 (Assets)**: Icons and logos
 
-## Usage
-1. Run the program.
-2. Choose between generating new keys or encrypting/decrypting a message.
-3. Follow the prompts to save keys and messages.
+## 🛠️ Installation
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/ArianGhanooni/Asymmetric-Key-Encryption.git
+   cd Asymmetric-Key-Encryption
+
+2. Install Python (>=3.8).
+
+3. Run the application:
+    python desktop.py
+
+4. You can build a single .exe file using PyInstaller:
+    ```bash
+    pyinstaller --onefile --noconsole --add-data "Assets;Assets" desktop.py
 
 ---
-⚠️ Note: This project is for educational purposes only and should not be used in production.
+
+> [!warning]
+> The executable file must be placed in the same directory as the Assets folder.
+> Otherwise, the application may fail to load icons and images correctly.
+
+---
+
+## 📖 How It Works
+
+1. Enter a key size and generate RSA keys.
+2. Provide a file name to save keys.
+3. Write a message in the "Plain Text" field.
+4. Encrypt the message → Cipher text appears.
+5. Save the cipher into a file.
+6. Decrypt using the saved cipher file → Original text appears.
+
+## 👨‍💻 Author
+
+### Arian Ghanooni
