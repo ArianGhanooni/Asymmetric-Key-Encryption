@@ -1,11 +1,16 @@
 import os
+import sys
 import Math
 import string
 import random
 import PrimeNumber
 
 #Files Path
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+if getattr(sys, 'frozen', False):  
+    BASE_DIR = os.path.dirname(sys.executable)
+else:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 
 #Key Generator
 def generateKeys(keySize = 1024, log = False):
