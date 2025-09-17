@@ -118,6 +118,27 @@ def Open_Link(event=None):
     url = "https://github.com/ArianGhanooni"
     webbrowser.open_new_tab(url)
 
+def Login():
+    pass
+
+def Logout():
+    pass
+
+def Signup():
+    pass
+
+def Sent_Messages():
+    pass
+
+def Received_Messages():
+    pass
+
+def Public_Keys():
+    pass
+
+def Private_Keys():
+    pass
+
 # ----------------------------
 # Main Window Configuration
 # ----------------------------
@@ -127,6 +148,27 @@ root.geometry("520x750+0+0")   # Window size
 root.resizable(False, False)   # Disable resizing
 root.config(background="#121212")
 root.title("RSA Encryption Tool")
+
+# ----------------------------
+# Menu Bar
+# ----------------------------
+menubar = Menu(root)
+account_menu = Menu(menubar, tearoff=0,  font=("Inter", 10, "bold"))
+account_menu.add_command(label="Login", command=Login)
+account_menu.add_command(label="Logout", command=Logout)
+account_menu.add_separator()
+account_menu.add_command(label="Signup", command=Signup)
+menubar.add_cascade(label="Account", menu=account_menu)
+
+selection_menu = Menu(menubar, tearoff=0,  font=("Inter", 10, "bold"))
+selection_menu.add_command(label="Sent Messages", command=Sent_Messages)
+selection_menu.add_command(label="Received Messages", command=Received_Messages)
+selection_menu.add_separator()
+selection_menu.add_command(label="Public Keys", command=Public_Keys)
+selection_menu.add_command(label="Private Keys", command=Private_Keys)
+menubar.add_cascade(label="Selection", menu=selection_menu)
+
+root.config(menu=menubar)
 
 # ----------------------------
 # Window Icon
