@@ -155,7 +155,58 @@ def Logout():
     pass
 
 def Signup():
-    pass
+    signup_win = Toplevel(root)
+    signup_win.title("Signup")
+    signup_win.geometry("300x300")
+    signup_win.resizable(False, False)
+    signup_win.config(bg="#121212")
+
+    Label(signup_win, text="Username :", font=("Inter", 12, "bold"),
+          bg="#121212", fg="#ffffff").pack(pady=10)
+    
+    username_entry = Entry(signup_win, font=("Inter", 12), bg="#262626", fg="#ffffff", width=15)
+    username_entry.pack(pady=5)
+
+    Label(signup_win, text="Password :", font=("Inter", 12, "bold"),
+          bg="#121212", fg="#ffffff").pack(pady=10)
+    
+    pass1_entry = Entry(signup_win, show="*", font=("Inter", 12), bg="#262626", fg="#ffffff", width=15)
+    pass1_entry.pack(pady=5)
+
+    Label(signup_win, text="Confirm Password :", font=("Inter", 12, "bold"),
+          bg="#121212", fg="#ffffff").pack(pady=10)
+
+    pass2_entry = Entry(signup_win, show="*", font=("Inter", 12), bg="#262626", fg="#ffffff", width=15)
+    pass2_entry.pack(pady=5)
+
+    def register():
+        username = username_entry.get()
+        pass1 = pass1_entry.get()
+        pass2 = pass2_entry.get()
+
+        if not username or not pass1 or not pass2:
+            messagebox.showerror("Error", "All fields are required!")
+            return
+
+        if pass1 != pass2:
+            messagebox.showerror("Error", "Passwords do not match!")
+            return
+
+        try:
+            conn = sqlite3.connect("RSA_App_Database.db")
+            cursor = conn.cursor()
+            cursor.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, pass1))
+            conn.commit()
+            conn.close()
+            messagebox.showinfo("Success", "Account created successfully!")
+            signup_win.destroy()
+        except sqlite3.IntegrityError:
+            messagebox.showerror("Error", "Username already exists!")
+
+    Button(signup_win, text="Signup", font=("Inter", 12, "bold"),
+           bg="#d32f2f", fg="#ffffff",
+           activebackground="#ffffff", activeforeground="#d32f2f",
+           command=register).pack(pady=15)
 
 def Sent_Messages():
     pass
