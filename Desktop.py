@@ -151,8 +151,6 @@ def Open_Link(event=None):
     webbrowser.open_new_tab(url)
 
 def Login():
-    global Current_User
-
     login_win = Toplevel(root)
     login_win.title("Login")
     login_win.geometry("300x220")
@@ -172,6 +170,8 @@ def Login():
     pass_entry.pack(pady=5)
 
     def do_login():
+        global Current_User
+
         username = username_entry.get()
         password = pass_entry.get()
 
@@ -186,6 +186,7 @@ def Login():
             messagebox.showinfo("Success", f"Logged in as {username}")
             root.title(f"RSA Encryption Tool {Current_User[1]}")
             login_win.destroy()
+
         else:
             messagebox.showerror("Error", "Invalid username or password")
 
@@ -195,7 +196,14 @@ def Login():
            command=do_login).pack(pady=15)
 
 def Logout():
-    pass
+    global Current_User
+    
+    if Current_User:
+        messagebox.showinfo("Logout", f"User {Current_User[1]} logged out")
+        root.title("RSA Encryption Tool")
+        Current_User = None
+    else:
+        messagebox.showwarning("Warning", "No user logged in!")
 
 def Signup():
     signup_win = Toplevel(root)
