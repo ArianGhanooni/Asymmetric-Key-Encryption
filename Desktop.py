@@ -4,6 +4,36 @@ from tkinter import *
 from tkinter import filedialog
 from KeyGenerator import *
 from tkinter import messagebox
+import sqlite3
+
+conn = sqlite3.connect("RSA_App_Database.db")
+conn.execute("PRAGMA foreign_keys = ON;")
+cursor = conn.cursor()
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS users (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    Username TEXT NOT NULL UNIQUE,
+    Password TEXT NOT NULL,
+    Public_key TEXT,
+    Private_key TEXT
+)
+""")
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS messages (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    Sender_ID INTEGER,
+    Receiver_ID INTEGER,
+    Message TEXT,
+    Status TEXT,
+    FOREIGN KEY(Sender_ID) REFERENCES users(ID) ON DELETE CASCADE,
+    FOREIGN KEY(Receiver_ID) REFERENCES users(ID) ON DELETE CASCADE
+)
+""")
+
+conn.commit()
+conn.close()
 
 # ----------------------------
 # Event Handlers (to be implemented later)
