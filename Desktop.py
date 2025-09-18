@@ -6,6 +6,8 @@ from KeyGenerator import *
 from tkinter import messagebox
 import sqlite3
 
+Current_User = None
+
 conn = sqlite3.connect("RSA_App_Database.db")
 conn.execute("PRAGMA foreign_keys = ON;")
 cursor = conn.cursor()
@@ -149,7 +151,48 @@ def Open_Link(event=None):
     webbrowser.open_new_tab(url)
 
 def Login():
-    pass
+    global Current_User
+
+    login_win = Toplevel(root)
+    login_win.title("Login")
+    login_win.geometry("300x220")
+    login_win.resizable(False, False)
+    login_win.config(bg="#121212")
+
+    Label(login_win, text="Username :", font=("Inter", 12, "bold"),
+          bg="#121212", fg="#ffffff").pack(pady=10)
+    
+    username_entry = Entry(login_win, font=("Inter", 12), bg="#262626", fg="#ffffff", width=15)
+    username_entry.pack(pady=5)
+
+    Label(login_win, text="Password :", font=("Inter", 12, "bold"),
+          bg="#121212", fg="#ffffff").pack(pady=10)
+    
+    pass_entry = Entry(login_win, show="*", font=("Inter", 12), bg="#262626", fg="#ffffff", width=15)
+    pass_entry.pack(pady=5)
+
+    def do_login():
+        username = username_entry.get()
+        password = pass_entry.get()
+
+        conn = sqlite3.connect("RSA_App_Database.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
+        user = cursor.fetchone()
+        conn.close()
+
+        if user:
+            Current_User = user
+            messagebox.showinfo("Success", f"Logged in as {username}")
+            root.title(f"RSA Encryption Tool {Current_User[1]}")
+            login_win.destroy()
+        else:
+            messagebox.showerror("Error", "Invalid username or password")
+
+    Button(login_win, text="Signup", font=("Inter", 12, "bold"),
+           bg="#d32f2f", fg="#ffffff",
+           activebackground="#ffffff", activeforeground="#d32f2f",
+           command=do_login).pack(pady=15)
 
 def Logout():
     pass
