@@ -3,21 +3,23 @@ import sys
 import Math
 import string
 import random
-import sqlite3
 import PrimeNumber
 
-#Files Path
+# Files Path
+# If the program is packaged (frozen with PyInstaller), BASE_DIR points to the executable directory.
+# Otherwise, it points to the directory of the current Python file.
 if getattr(sys, 'frozen', False):  
     BASE_DIR = os.path.dirname(sys.executable)
 else:
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-
-#Key Generator
+# ----------------------------
+# Key Generation
+# ----------------------------
 def generateKeys(keySize = 1024, log = False):
-    # Generates an RSA key pair: a public key (n, e) and a private key (n, d).
-    # Uses two large random prime numbers (p and q), where keySize defines their bit length.
-    # If log is True, progress messages will be printed during generation.
+    """ Generates an RSA key pair: a public key (n, e) and a private key (n, d).
+     Uses two large random prime numbers (p and q), where keySize defines their bit length.
+     If log is True, progress messages will be printed during generation."""
 
     #1
     if log: print("Generating N")
@@ -72,15 +74,18 @@ def writePrivateKeysToFile(keySize, privateKey, fileName):
     
     privateFile.close()
 
-#Encryption & Decryption
+# ----------------------------
+# Encryption & Decryption
+# ----------------------------
 symbols = " " + string.punctuation + string.digits + string.ascii_letters
 # The set of allowed characters in messages.
+
 block_size = 16
 # block_size defines how many characters are grouped into each encryption block.
 
 def blockToString(blocks):
-    # Converts the input string into a list of numeric blocks based on each character's index in the symbols list.
-    # These blocks are used for RSA encryption.
+    """ Converts the input string into a list of numeric blocks based on each character's index in the symbols list.
+     These blocks are used for RSA encryption."""
 
     output = ""
 
@@ -93,8 +98,8 @@ def blockToString(blocks):
     return output
     
 def stringToBlock(plainText):
-    # Converts a list of numeric blocks back into a readable text string using the symbols list.
-    # Used to restore the decrypted message to its original form.
+    """ Converts a list of numeric blocks back into a readable text string using the symbols list.
+     Used to restore the decrypted message to its original form."""
 
     output = []
 
@@ -118,9 +123,9 @@ def stringToBlock(plainText):
     return output
 
 def encrypt(plainText, publickey, outputFile):
-    # Encrypts the input plain text using the public key.
-    # The text is first converted to numeric blocks, then each block is encrypted using RSA.
-    # The resulting ciphertext blocks are saved to the output file as comma-separated values.
+    """ Encrypts the input plain text using the public key.
+     The text is first converted to numeric blocks, then each block is encrypted using RSA.
+     The resulting ciphertext blocks are saved to the output file as comma-separated values."""
 
     plainBlocks = stringToBlock(plainText)
     cipherBlocks = []
@@ -134,9 +139,9 @@ def encrypt(plainText, publickey, outputFile):
         file.write(",".join(cipherBlocks))
 
 def decrypt(encrypted_file, privatekey):
-    # Decrypts the encrypted message using the private key.
-    # Reads encrypted blocks from the input file, decrypts each block using RSA,
-    # and reconstructs the original message from the decrypted blocks.
+    """ Decrypts the encrypted message using the private key.
+     Reads encrypted blocks from the input file, decrypts each block using RSA,
+     and reconstructs the original message from the decrypted blocks."""
 
     encrypted_path = os.path.join(BASE_DIR, encrypted_file)
     with open(encrypted_path, 'r') as file:
@@ -153,27 +158,22 @@ def decrypt(encrypted_file, privatekey):
     return blockToString(plainBlocks)
 
 def readKeysFromFile(fileName):
-    # Reads the public and private RSA keys from their respective files using the given base file name.
-    # Assumes the files were written using the writeKeysToFile function.
+    """ Reads the public and private RSA keys from their respective files using the given base file name.
+     Assumes the files were written using the writeKeysToFile function."""
 
-    public_path = os.path.join(BASE_DIR, f"{fileName}_public.key")
-    private_path = os.path.join(BASE_DIR, f"{fileName}_private.key")
+    public_path = os.path.join(BASE_DIR, f"{fileName}_Public.txt")
 
     with open(public_path, 'r') as publicFile:
         publicKey = publicFile.read()
 
-    with open(private_path, 'r') as privateFile:
-        privateKey = privateFile.read()
-
     publicKey = publicKey.split(",")
     publicKey = (int(publicKey[1]), int(publicKey[2]))
-
-    privateKey = privateKey.split(",")
-    privateKey = (int(privateKey[1]), int(privateKey[2]))
     
-    return publicKey, privateKey
+    return publicKey
 
-#BODY
+# ----------------------------
+# Body
+# ----------------------------
 if __name__ == "__main__":
     generateKey = input("Do you want Generate key or Encrypt/decrypt? (Enter G or E) : ").upper()
 
