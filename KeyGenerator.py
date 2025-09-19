@@ -3,6 +3,7 @@ import sys
 import Math
 import string
 import random
+import sqlite3
 import PrimeNumber
 
 #Files Path
@@ -48,20 +49,27 @@ def generateKeys(keySize = 1024, log = False):
 
     return publicKey, privateKey
 
-def writeKeysToFile(keySize, publicKey, privateKey, fileName):
-    # Saves the public and private keys to two separate text files in CSV format.
+def writePublicKeysToFile(keySize, publicKey, fileName):
+    # Saves the public keys to two separate text files in CSV format.
     # The filenames are based on the given fileName parameter.
 
-    public_path = os.path.join(BASE_DIR, f"{fileName}_public.key")
-    private_path = os.path.join(BASE_DIR, f"{fileName}_private.key")
+    public_path = os.path.join(BASE_DIR, f"{fileName}_public.txt")
 
     with open(public_path, 'w') as publicFile:
         publicFile.write(f"{keySize},{publicKey[0]},{publicKey[1]}")
 
+    publicFile.close()
+    
+
+def writePrivateKeysToFile(keySize, privateKey, fileName):
+    # Saves the private keys to two separate text files in CSV format.
+    # The filenames are based on the given fileName parameter.
+
+    private_path = os.path.join(BASE_DIR, f"{fileName}_private.txt")
+
     with open(private_path, 'w') as privateFile:
         privateFile.write(f"{keySize},{privateKey[0]},{privateKey[1]}")
-
-    publicFile.close()
+    
     privateFile.close()
 
 #Encryption & Decryption
@@ -173,7 +181,8 @@ if __name__ == "__main__":
         keySize = int(input("Keysize : "))
         fileName = input("Output file name : ")
         publicKey, privateKey = generateKeys(keySize, log = True)
-        writeKeysToFile(keySize, publicKey, privateKey, fileName)
+        writePublicKeysToFile(keySize, publicKey, fileName)
+        writePrivateKeysToFile(keySize, privateKey, fileName)
 
     elif generateKey == "E":
         op = input("Encrypt or Decrypt ? (Enter E or D) : ").upper()
