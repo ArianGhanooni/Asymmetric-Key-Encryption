@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
     ID INTEGER PRIMARY KEY AUTOINCREMENT,
     Username TEXT NOT NULL UNIQUE,
     Password TEXT NOT NULL,
+    Key_name TEXT,
     Public_key TEXT,
     Private_key TEXT
 )
@@ -25,17 +26,25 @@ CREATE TABLE IF NOT EXISTS users (
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS messages (
     ID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Sender_ID INTEGER,
-    Receiver_ID INTEGER,
     Message TEXT,
-    Status TEXT,
-    FOREIGN KEY(Sender_ID) REFERENCES users(ID) ON DELETE CASCADE,
-    FOREIGN KEY(Receiver_ID) REFERENCES users(ID) ON DELETE CASCADE
-)
+    Status TEXT)
 """)
 
 conn.commit()
 conn.close()
+
+def saveKeysToDB(keySize, publicKey, privateKey, fileName):
+    global Current_User
+    conn = sqlite3.connect("RSA_App_Database.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE users
+        SET Key_name=?, Public_key=?, Private_key=?
+        WHERE Username=?
+    """, (fileName, f"{keySize},{publicKey[0]},{publicKey[1]}",
+          f"{keySize},{privateKey[0]},{privateKey[1]}", Current_User[1]))
+    conn.commit()
+    conn.close()
 
 # ----------------------------
 # Event Handlers (to be implemented later)
@@ -53,7 +62,7 @@ def Generate_Key_Button():
             
             # Call Key Generator function
             publicKey, privateKey = generateKeys(keySize, log = True)
-            writeKeysToFile(keySize, publicKey, privateKey, fileName)  
+            saveKeysToDB(keySize, publicKey, privateKey, fileName)  
             
             messagebox.showinfo("Success", f"Key generated successfully!\nFile: {fileName}")
             top.destroy()
@@ -266,10 +275,58 @@ def Received_Messages():
     pass
 
 def Public_Keys():
-    pass
+    if not Current_User:
+        messagebox.showwarning("Warning", "Please login first!")
+        return
+    
+    conn = sqlite3.connect("RSA_App_Database.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT Public_key FROM users WHERE ID=?", (Current_User[0],))
+    row = cursor.fetchone()
+    conn.close()
+
+    if row[0]:
+        fileName = Entry_Key.get().strip()
+        if not fileName:
+            messagebox.showwarning("Warning", "Please enter a file name in the 'File Name' field!")
+            return
+        public_path = os.path.join(BASE_DIR, f"{fileName}_Public.txt")
+
+        with open(public_path, 'w') as publicFile:
+            publicFile.write(row[0])
+
+        publicFile.close()
+        messagebox.showinfo("Success", "Public key exported successfully!")
+
+    else:
+        messagebox.showerror("Error", "No public key found in database.")
 
 def Private_Keys():
-    pass
+    if not Current_User:
+        messagebox.showwarning("Warning", "Please login first!")
+        return
+    
+    conn = sqlite3.connect("RSA_App_Database.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT Private_key FROM users WHERE ID=?", (Current_User[0],))
+    row = cursor.fetchone()
+    conn.close()
+
+    if row[0]:
+        fileName = Entry_Key.get().strip()
+        if not fileName:
+            messagebox.showwarning("Warning", "Please enter a file name in the 'File Name' field!")
+            return
+        private_path = os.path.join(BASE_DIR, f"{fileName}_Private.txt")
+
+        with open(private_path, 'w') as privateFile:
+            privateFile.write(row[0])
+
+        privateFile.close()
+        messagebox.showinfo("Success", "Private key exported successfully!")
+
+    else:
+        messagebox.showerror("Error", "No Private key found in database.")
 
 # ----------------------------
 # Main Window Configuration
@@ -296,8 +353,8 @@ selection_menu = Menu(menubar, tearoff=0,  font=("Inter", 10, "bold"))
 selection_menu.add_command(label="Sent Messages", command=Sent_Messages)
 selection_menu.add_command(label="Received Messages", command=Received_Messages)
 selection_menu.add_separator()
-selection_menu.add_command(label="Public Keys", command=Public_Keys)
-selection_menu.add_command(label="Private Keys", command=Private_Keys)
+selection_menu.add_command(label="Save Public Keys", command=Public_Keys)
+selection_menu.add_command(label="Save Private Keys", command=Private_Keys)
 menubar.add_cascade(label="Selection", menu=selection_menu)
 
 root.config(menu=menubar)
