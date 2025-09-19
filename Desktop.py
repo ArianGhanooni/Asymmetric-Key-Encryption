@@ -1,4 +1,6 @@
-#Imports
+# ----------------------------
+# Imports
+# ----------------------------
 import webbrowser
 from tkinter import *
 from tkinter import filedialog
@@ -6,12 +8,19 @@ from KeyGenerator import *
 from tkinter import messagebox
 import sqlite3
 
-Current_User = None
+# ----------------------------
+# Global Variables
+# ----------------------------
+Current_User = None  # Holds the currently logged-in user
 
+# ----------------------------
+# Database Initialization
+# ----------------------------
 conn = sqlite3.connect("RSA_App_Database.db")
 conn.execute("PRAGMA foreign_keys = ON;")
 cursor = conn.cursor()
 
+# Users table (stores user info and keys)
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS users (
     ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -23,17 +32,26 @@ CREATE TABLE IF NOT EXISTS users (
 )
 """)
 
+# Messages table (stores messages with send/receive status)
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS messages (
     ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    User_ID INTEGER, 
     Message TEXT,
-    Status TEXT)
+    Status TEXT,
+    FOREIGN KEY(User_ID) REFERENCES users(ID) ON DELETE CASCADE
+)
 """)
 
 conn.commit()
 conn.close()
 
+# ----------------------------
+# Functions
+# ----------------------------
 def saveKeysToDB(keySize, publicKey, privateKey, fileName):
+    """Save generated public/private keys into the database for the logged-in user"""
+
     global Current_User
     conn = sqlite3.connect("RSA_App_Database.db")
     cursor = conn.cursor()
@@ -47,11 +65,14 @@ def saveKeysToDB(keySize, publicKey, privateKey, fileName):
     conn.close()
 
 # ----------------------------
-# Event Handlers (to be implemented later)
+# Event Handlers
 # ----------------------------
 def Generate_Key_Button():
-    """Handle Generate Key button click."""
+    """Open popup window to generate keys and save them in the database"""
+
     def Confirm_Key():
+        """Validate input and generate key pair"""
+
         try:
             keySize = int(entry_keysize.get())
             fileName = Entry_Key.get()
@@ -60,7 +81,7 @@ def Generate_Key_Button():
                 messagebox.showwarning("Warning", "Please enter a file name in the main window!")
                 return
             
-            # Call Key Generator function
+            # Generate keys and save to DB
             publicKey, privateKey = generateKeys(keySize, log = True)
             saveKeysToDB(keySize, publicKey, privateKey, fileName)  
             
@@ -88,32 +109,33 @@ def Generate_Key_Button():
            command=Confirm_Key).pack(pady=15)
     
 def Encrypt_Button():
-    """Handle Encrypt button click."""
-    # Step 1: Check for key filename
+    """Encrypt plain text message, save cipher file, and log it into the database"""
+
+    # 1. Check for key file name
     filename = Entry_Key.get().strip()
     if not filename:
         messagebox.showwarning("Warning", "Please enter a file name in the 'File Name' field!")
         return
 
-    # Step 2: Check for plain text
+    # 2. Check for plain text
     plaintext = Plain_Text.get("1.0", END).strip()
     if not plaintext:
         messagebox.showwarning("Warning", "Please enter a message in the Plain Text field!")
         return
 
-    # Step 3: Save cipher if Entry_Decrypt is provided
+    # 3. Check for output cipher file name
     cipher_filename = Entry_Decrypt.get().strip()
     if not cipher_filename:
         messagebox.showwarning("Warning", "Please enter a name for save cipher file in the 'Encrypted File' field!")
         return
     
     try:
-        # Step 4: Encrypt message (adjust to your encryption function)
-        public, private = readKeysFromFile(filename)
+        # 4. Read public key and encrypt
+        public = readKeysFromFile(filename)
         encrypt(plaintext, public, cipher_filename)
         messagebox.showinfo("Success", f"Message encrypted and saved as {cipher_filename}")
 
-        # Step 5: Clear Cipher_Text and insert result
+        # 5. Display encrypted content
         encrypted_path = os.path.join(BASE_DIR, cipher_filename)
         with open(encrypted_path, 'r') as file:
               Cipher = file.read()
@@ -121,31 +143,65 @@ def Encrypt_Button():
         Cipher_Text.delete("1.0", END)
         Cipher_Text.insert("1.0", Cipher)
 
+        # 6. Save message to database with "send" status
+        if Current_User:
+            conn = sqlite3.connect("RSA_App_Database.db")
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO messages (User_ID, Message, Status)
+                VALUES (?, ?, ?)
+            """, (Current_User[0], cipher_filename, "send"))
+            conn.commit()
+            conn.close()
+
     except Exception as e:
         messagebox.showerror("Error", f"Encryption failed:\n{e}")
 
 def Decrypt_Button():
-    """Handle Decrypt button click."""
-    # Step 1: Check for key filename
-    filename = Entry_Key.get().strip()
-    if not filename:
-        messagebox.showwarning("Warning", "Please enter a file name in the 'File Name' field!")
-        return
+    """Decrypt a cipher file using private key from DB, then save message with 'receive' status"""
 
-    # Step 2: Check for cipher file name
+    # 1. Check for cipher file name
     cipher_filename = Entry_Decrypt.get().strip()
     if not cipher_filename:
         messagebox.showwarning("Warning", "Please enter the encrypted file name in the 'Encrypted File' field!")
         return
 
     try:
-        # Step 3: Read cipher text from file
-        public, private = readKeysFromFile(filename)
+        if not Current_User:
+            messagebox.showwarning("Warning", "No user logged in!")
+            return
+        
+        # 2. Fetch private key from DB
+        conn = sqlite3.connect("RSA_App_Database.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT Private_key FROM users WHERE ID=?", (Current_User[0],))
+        row = cursor.fetchone()
+        conn.close()
+
+        if not row:
+            messagebox.showerror("Error", "No private key found in database!")
+            return
+        
+        private = row[0]
+        private = private.split(",")
+        private = (int(private[1]), int(private[2]))
+
+        # 3. Decrypt the cipher file
         original_File = decrypt(cipher_filename, private)
 
-        # Step 4: Clear Original_Text and insert result
+        # 4. Show decrypted message
         Original_Text.delete("1.0", END)
         Original_Text.insert("1.0", original_File)
+
+        # 5. Save decrypted message with "receive" status
+        conn = sqlite3.connect("RSA_App_Database.db")
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO messages (User_ID, Message, Status)
+            VALUES (?, ?, ?)
+        """, (Current_User[0], cipher_filename, "receive"))
+        conn.commit()
+        conn.close()
 
         messagebox.showinfo("Success", "Message decrypted successfully!")
 
@@ -154,12 +210,20 @@ def Decrypt_Button():
     except Exception as e:
         messagebox.showerror("Error", f"Decryption failed:\n{e}")
 
+# ----------------------------
+# Link Function
+# ----------------------------
 def Open_Link(event=None):
     """Open GitHub link in default browser."""
     url = "https://github.com/ArianGhanooni"
     webbrowser.open_new_tab(url)
 
+# ----------------------------
+# Authentication Functions
+# ----------------------------
 def Login():
+    """Login window for existing users"""
+
     login_win = Toplevel(root)
     login_win.title("Login")
     login_win.geometry("300x220")
@@ -179,6 +243,8 @@ def Login():
     pass_entry.pack(pady=5)
 
     def do_login():
+        """Validate user credentials"""
+
         global Current_User
 
         username = username_entry.get()
@@ -205,6 +271,8 @@ def Login():
            command=do_login).pack(pady=15)
 
 def Logout():
+    """Logout from current user's"""
+
     global Current_User
     
     if Current_User:
@@ -215,6 +283,8 @@ def Logout():
         messagebox.showwarning("Warning", "No user logged in!")
 
 def Signup():
+    """Signup window for new users"""
+
     signup_win = Toplevel(root)
     signup_win.title("Signup")
     signup_win.geometry("300x300")
@@ -240,6 +310,8 @@ def Signup():
     pass2_entry.pack(pady=5)
 
     def register():
+        """Register user in the database"""
+
         username = username_entry.get()
         pass1 = pass1_entry.get()
         pass2 = pass2_entry.get()
@@ -268,13 +340,65 @@ def Signup():
            activebackground="#ffffff", activeforeground="#d32f2f",
            command=register).pack(pady=15)
 
+# ----------------------------
+# Message Display Functions
+# ----------------------------
 def Sent_Messages():
-    pass
+    """Show all sent messages for the logged-in user"""
+
+    if not Current_User:
+        messagebox.showwarning("Warning", "No user logged in!")
+        return
+
+    conn = sqlite3.connect("RSA_App_Database.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT Message FROM messages WHERE User_ID=? AND Status='send'", (Current_User[0],))
+    rows = cursor.fetchall()
+    conn.close()
+
+    msg_win = Toplevel(root)
+    msg_win.title("Sent Messages")
+    msg_win.geometry("400x300")
+    msg_win.resizable(False, False)
+    msg_win.config(bg="#121212")
+
+    text_box = Text(msg_win, font=("Inter", 12), bg="#262626", fg="#ffffff")
+    text_box.pack(padx=30, pady=30)
+
+    for row in rows:
+        text_box.insert(END, f"{row[0]}\n")
 
 def Received_Messages():
-    pass
+    """Show all received messages for the logged-in user"""
 
+    if not Current_User:
+        messagebox.showwarning("Warning", "No user logged in!")
+        return
+
+    conn = sqlite3.connect("RSA_App_Database.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT Message FROM messages WHERE User_ID=? AND Status='receive'", (Current_User[0],))
+    rows = cursor.fetchall()
+    conn.close()
+
+    msg_win = Toplevel(root)
+    msg_win.title("Receive Messages")
+    msg_win.geometry("400x300")
+    msg_win.resizable(False, False)
+    msg_win.config(bg="#121212")
+
+    text_box = Text(msg_win, font=("Inter", 12), bg="#262626", fg="#ffffff")
+    text_box.pack(padx=30, pady=30)
+
+    for row in rows:
+        text_box.insert(END, f"{row[0]}\n")
+
+# ----------------------------
+# Key Export
+# ----------------------------
 def Public_Keys():
+    """Export the current user's keys to a file"""
+
     if not Current_User:
         messagebox.showwarning("Warning", "Please login first!")
         return
@@ -302,6 +426,8 @@ def Public_Keys():
         messagebox.showerror("Error", "No public key found in database.")
 
 def Private_Keys():
+    """Export the current user's keys to a file"""
+
     if not Current_User:
         messagebox.showwarning("Warning", "Please login first!")
         return
