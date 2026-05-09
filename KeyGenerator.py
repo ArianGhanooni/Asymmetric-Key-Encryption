@@ -14,6 +14,35 @@ else:
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # ----------------------------
+# Main
+# ----------------------------
+def main():
+    generateKey = input("Do you want Generate key or Encrypt/decrypt? (Enter G or E) : ").upper()
+
+    if generateKey == "G":
+        keySize = int(input("Keysize : "))
+        fileName = input("Output file name : ")
+        publicKey, privateKey = generateKeys(keySize, log = True)
+        writePublicKeysToFile(keySize, publicKey, fileName)
+        writePrivateKeysToFile(keySize, privateKey, fileName)
+
+    elif generateKey == "E":
+        op = input("Encrypt or Decrypt ? (Enter E or D) : ").upper()
+
+        if op == "E":
+            plainText = input("Your Message : ")
+            keyFile = input("Key File Name : ")
+            outputFile = input("Output File Name : ")
+            public, private = readKeysFromFile(keyFile)
+            encrypt(plainText, public, outputFile)
+
+        elif op == "D":
+            encryptedFile = input("Encrypted File Name : ")
+            keyFile = input("Key File Name : ")
+            public, private = readKeysFromFile(keyFile)
+            print(decrypt(encryptedFile, private))
+
+# ----------------------------
 # Key Generation
 # ----------------------------
 def generateKeys(keySize = 1024, log = False):
@@ -158,44 +187,21 @@ def decrypt(encrypted_file, privatekey):
     return blockToString(plainBlocks)
 
 def readKeysFromFile(fileName):
-    """ Reads the public and private RSA keys from their respective files using the given base file name.
-     Assumes the files were written using the writeKeysToFile function."""
+    """ Reads both public and private RSA keys from files. """
+    public_path = os.path.join(BASE_DIR, f"{fileName}_public.txt")
+    private_path = os.path.join(BASE_DIR, f"{fileName}_private.txt")
 
-    public_path = os.path.join(BASE_DIR, f"{fileName}_Public.txt")
+    with open(public_path, 'r') as f:
+        pub_data = f.read().split(',')
+    with open(private_path, 'r') as f:
+        priv_data = f.read().split(',')
 
-    with open(public_path, 'r') as publicFile:
-        publicKey = publicFile.read()
-
-    publicKey = publicKey.split(",")
-    publicKey = (int(publicKey[1]), int(publicKey[2]))
-    
-    return publicKey
+    publicKey = (int(pub_data[1]), int(pub_data[2]))
+    privateKey = (int(priv_data[1]), int(priv_data[2]))
+    return publicKey, privateKey
 
 # ----------------------------
 # Body
 # ----------------------------
 if __name__ == "__main__":
-    generateKey = input("Do you want Generate key or Encrypt/decrypt? (Enter G or E) : ").upper()
-
-    if generateKey == "G":
-        keySize = int(input("Keysize : "))
-        fileName = input("Output file name : ")
-        publicKey, privateKey = generateKeys(keySize, log = True)
-        writePublicKeysToFile(keySize, publicKey, fileName)
-        writePrivateKeysToFile(keySize, privateKey, fileName)
-
-    elif generateKey == "E":
-        op = input("Encrypt or Decrypt ? (Enter E or D) : ").upper()
-
-        if op == "E":
-            plainText = input("Your Message : ")
-            keyFile = input("Key File Name : ")
-            outputFile = input("Output File Name : ")
-            public, private = readKeysFromFile(keyFile)
-            encrypt(plainText, public, outputFile)
-
-        elif op == "D":
-            encryptedFile = input("Encrypted File Name : ")
-            keyFile = input("Key File Name : ")
-            public, private = readKeysFromFile(keyFile)
-            print(decrypt(encryptedFile, private))
+    main()
